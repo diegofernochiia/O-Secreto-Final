@@ -6,7 +6,6 @@
     <title>Simulador de Governo - Clicker</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    
     <script type="module" src="supabaseClient.js"></script>
 </head>
 <body>
@@ -30,7 +29,6 @@
     </div>
 
     <div id="game-screen" class="screen hidden">
-        
         <div id="event-ticker" class="ticker-hidden">Aguardando relatórios econômicos...</div>
         
         <div class="top-status-panel">
@@ -40,7 +38,6 @@
         </div>
 
         <div class="game-main-layout">
-            
             <div class="items-column-scroll">
                 <div id="left-items-container"></div>
             </div>
@@ -58,7 +55,6 @@
             <div class="items-column-scroll">
                 <div id="right-items-container"></div>
             </div>
-
         </div>
 
         <button id="prestige-trigger-btn" onclick="triggerPrestige()">PRESTIGE</button>
@@ -84,6 +80,7 @@
         let globalMultiplier = 1;
         let costMultiplier = 1;
         let eventTimeout = null;
+        let autoSaveInterval = null;
 
         const ITEMS_CONFIG = [
             { id: 'bolsa_familia', name: 'Bolsa Família', baseCost: 25, cycleTime: 2000, baseProduce: 2, icon: '📦', side: 'left', perk: "Nvl 10: Ciclo 2x mais rápido!" },
@@ -134,14 +131,13 @@
             }, 15000);
         }
 
-        // --- SISTEMA CONECTADO AO SEU SUPABASE CLIENT ---
         async function handleAuth(type) {
             const user = document.getElementById('username-input').value.trim();
             const pass = document.getElementById('password-input').value;
             const msg = document.getElementById('auth-message');
 
             if (!window.supabaseClient) {
-                msg.textContent = "Carregando banco de dados... Tente novamente em 2 segundos.";
+                msg.textContent = "Carregando banco de dados... Tente novamente.";
                 return;
             }
 
@@ -189,6 +185,10 @@
             buildStore();
             startProductionCycles();
             startEventEngine();
+            
+            // Ativa o Auto-salvamento a cada 10 segundos para não estressar o Supabase
+            if(autoSaveInterval) clearInterval(autoSaveInterval);
+            autoSaveInterval = setInterval(saveGame, 10000);
         }
 
         async function saveGame() {
@@ -202,6 +202,7 @@
         }
 
         function logout() {
+            clearInterval(autoSaveInterval);
             saveGame().then(() => {
                 Object.values(activeIntervals).forEach(clearInterval);
                 activeIntervals = {};
@@ -282,7 +283,7 @@
                 buildStore();
                 updateUI();
                 startProductionCycles();
-                saveGame();
+                saveGame(); // Salva em ações importantes (compras)
             }
         }
 
@@ -326,7 +327,7 @@
                             gameState.rankingScore += productionValue;
                             
                             updateUI();
-                            saveGame();
+                            // O saveGame() foi removido daqui para evitar travamentos no Supabase
                         }
                         if (progressBar) progressBar.style.width = progress + '%';
                     }, intervalSpeed);
@@ -339,7 +340,6 @@
             gameState.money += clickGain;
             gameState.rankingScore += clickGain;
             updateUI();
-            saveGame();
         }
 
         function toggleRankingModal() {
@@ -348,7 +348,6 @@
             if (!modal.classList.contains('hidden')) renderLeaderboard();
         }
 
-        // CARREGA RANKING REAL DO BANCO
         async function renderLeaderboard() {
             const list = document.getElementById('leaderboard-list');
             if (!window.supabaseClient) return;

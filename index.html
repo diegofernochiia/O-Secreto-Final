@@ -6,7 +6,10 @@
     <title>Simulador de Governo - Clicker</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <script type="module" src="supabaseClient.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="supabaseClient.js"></script>
 </head>
 <body>
 
@@ -186,7 +189,6 @@
             startProductionCycles();
             startEventEngine();
             
-            // Ativa o Auto-salvamento a cada 10 segundos para não estressar o Supabase
             if(autoSaveInterval) clearInterval(autoSaveInterval);
             autoSaveInterval = setInterval(saveGame, 10000);
         }
@@ -283,7 +285,7 @@
                 buildStore();
                 updateUI();
                 startProductionCycles();
-                saveGame(); // Salva em ações importantes (compras)
+                saveGame();
             }
         }
 
@@ -327,7 +329,6 @@
                             gameState.rankingScore += productionValue;
                             
                             updateUI();
-                            // O saveGame() foi removido daqui para evitar travamentos no Supabase
                         }
                         if (progressBar) progressBar.style.width = progress + '%';
                     }, intervalSpeed);

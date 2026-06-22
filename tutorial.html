@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Como Jogar - Simulador</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Press Start 2P', monospace; image-rendering: pixelated;
+        }
+        body {
+            background-color: #0b071a;
+            color: #fff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .tutorial-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #140f26;
+            border: 4px solid #a64dff;
+            border-radius: 8px;
+            padding: 35px;
+            text-align: left;
+            box-shadow: 0 0 20px rgba(166, 77, 255, 0.2);
+        }
+        h1 { 
+            color: #a64dff; 
+            font-size: 1.1rem; 
+            margin-bottom: 25px; 
+            text-align: center;
+            line-height: 1.5;
+            text-shadow: 2px 2px 0 #4d0099;
+        }
+        h2 {
+            color: #ffb066;
+            font-size: 0.75rem;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            border-bottom: 2px dashed #332759;
+            padding-bottom: 6px;
+        }
+        p, li { 
+            font-size: 0.55rem; 
+            line-height: 1.8; 
+            color: #ccf; 
+            margin-bottom: 12px; 
+        }
+        ul {
+            list-style: square inside;
+            margin-bottom: 15px;
+        }
+        li strong {
+            color: #00ffcc;
+        }
+        strong {
+            color: #fff;
+        }
+        .highlight-green {
+            color: #00ff66;
+        }
+
+        /* SIMULADOR INTERATIVO */
+        .prestige-demo-box {
+            background: #090514;
+            border: 2px dashed #ff3366;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 30px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .demo-title {
+            font-size: 0.6rem;
+            color: #ff3366;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 0 #4d001a;
+        }
+        .demo-question {
+            font-size: 0.5rem;
+            color: #ccf;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .demo-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .demo-btn {
+            font-family: 'Press Start 2P';
+            font-size: 0.55rem;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-sim {
+            background: #00ff66;
+            color: #000;
+            box-shadow: 0 4px 0 #009933;
+        }
+        .btn-nao {
+            background: #ff3366;
+            color: #fff;
+            box-shadow: 0 4px 0 #990022;
+        }
+        .demo-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        .demo-result {
+            font-size: 0.5rem;
+            color: #8c82a6;
+            line-height: 1.6;
+            min-height: 35px;
+            margin-top: 10px;
+        }
+
+        .btn-back-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .btn-index-back {
+            display: inline-block;
+            background: #00ffcc;
+            color: #000;
+            padding: 14px 24px;
+            font-size: 0.6rem;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #009999;
+            font-family: 'Press Start 2P';
+        }
+        .btn-index-back:active { 
+            transform: translateY(4px); 
+            box-shadow: none; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tutorial-container">
+        <h1>MANUAL DE GOVERNO<br>🎮 COMO JOGAR 🎮</h1>
+
+        <h2>1. O Objetivo Geral</h2>
+        <p>Você é o administrador financeiro do Estado. Seu objetivo é acumular capital gerindo e expandindo programas sociais para fazer a economia girar e subir degraus no <strong>Ranking Global Permanente</strong>.</p>
+
+        <h2>2. Como Funciona a Produção</h2>
+        <ul>
+            <li><strong>Clique Manual:</strong> Clicar no prédio do Banco Central (no centro) gera fundos imediatos de forma rápida.</li>
+            <li><strong>Automação:</strong> Ao comprar programas (como <em>Bolsa Família</em>), eles começam a trabalhar sozinhos.</li>
+            <li><strong>Barra de Carregamento:</strong> Cada programa tem seu próprio ciclo. Toda vez que a barra enche, o valor de produção é depositado no seu caixa automaticamente.</li>
+            <li><strong>Hito do Nível 10:</strong> Ao evoluir qualquer item para o nível 10, você desbloqueia uma melhoria especial definitiva para ele (ciclos 2x mais rápidos ou bônus de produção).</li>
+        </ul>
+
+        <h2>3. Eventos Econômicos Aleatórios</h2>
+        <p>Fique atento ao painel superior! A economia oscila em tempo real. Eventos como <strong>"Milagre Econômico"</strong> dobram seus lucros, enquanto crises fiscais mudam dinamicamente a velocidade e os custos do jogo.</p>
+
+        <h2>4. O Sistema de Prestígio (Prestige)</h2>
+        <p>Quando seu progresso começar a desacelerar e os upgrades ficarem muito caros, é hora de usar o <strong>Prestige</strong>.</p>
+        <p><strong>Para que serve?</strong> Ele zera seu saldo atual e remove seus programas comprados, mas aumenta permanentemente o seu nível de Prestige. Cada nível adiciona um bônus vitalício de <span class="highlight-green">+15% de lucro</span> sobre qualquer ganho ou clique futuro.</p>
+        <p><em>Nota: Seu progresso acumulado no Ranking Geral nunca é perdido ao fazer isso!</em></p>
+
+        <div class="prestige-demo-box">
+            <div class="demo-title">✨ SIMULADOR DE DECISÃO DE PRESTÍGIO ✨</div>
+            <div class="demo-question">
+                Deseja aplicar o Prestige?<br>
+                Seus programas e moedas voltam a zero, mas seu multiplicador permanente de Prestígio subirá de nível!
+            </div>
+            <div class="demo-buttons">
+                <button class="demo-btn btn-sim" onclick="explicarPrestige('sim')">SIM</button>
+                <button class="demo-btn btn-nao" onclick="explicarPrestige('nao')">NÃO</button>
+            </div>
+            <div id="demo-feedback" class="demo-result">Escolha uma opção para testar o que acontece.</div>
+        </div>
+
+        <div class="btn-back-container">
+            <a href="index.html" class="btn-index-back">◀ VOLTAR AO JOGO</a>
+        </div>
+    </div>
+
+    <script>
+        function explicarPrestige(opcao) {
+            const feedback = document.getElementById('demo-feedback');
+            if (opcao === 'sim') {
+                feedback.style.color = "#00ff66";
+                feedback.innerHTML = "🎯 VOCÊ ESCOLHEU 'SIM':<br>Seus programas reiniciam, mas sua produção agora está muito mais forte! Você subirá no ranking global 15% mais rápido do que antes.";
+            } else {
+                feedback.style.color = "#ff3366";
+                feedback.innerHTML = "❌ VOCÊ ESCOLHEU 'NÃO':<br>O processo foi cancelado. Você mantém suas moedas e construções atuais intactas para continuar acumulando antes do reset real.";
+            }
+        }
+    </script>
+</body>
+</html>

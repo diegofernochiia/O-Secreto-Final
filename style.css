@@ -1,0 +1,120 @@
+/* CONFIGURAÇÕES GERAIS RE-ADAPTADAS */
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Press Start 2P', monospace;
+    image-rendering: pixelated;
+}
+
+body {
+    background-color: #0b071a; color: #ffffff;
+    min-height: 100vh; display: flex; justify-content: center; align-items: center;
+    overflow: hidden; user-select: none;
+}
+
+.screen { width: 100vw; height: 100vh; padding: 20px; position: relative; display: flex; flex-direction: column; }
+.hidden { display: none !important; }
+
+/* NOVO: FEED DE EVENTOS ECONÔMICOS */
+#event-ticker {
+    width: 80%; max-width: 700px; margin: 0 auto 10px auto;
+    padding: 10px; font-size: 0.5rem; text-align: center;
+    border-radius: 4px; border: 2px dashed #332759;
+    transition: all 0.4s ease;
+}
+.ticker-hidden { background: #120e21; color: #54438a; }
+.event-ticker-active { animation: pulse 1.5s infinite ease-in-out; }
+.event-positive { background-color: #003311; border-color: #00ff66 !important; color: #00ff66; }
+.event-negative { background-color: #330011; border-color: #ff3366 !important; color: #ff3366; }
+
+/* PAINEL CENTRAL SUPERIOR */
+.top-status-panel {
+    background-color: #140f26; border: 3px solid #ffb066; border-radius: 12px;
+    width: 440px; margin: 0 auto 15px auto; padding: 12px; text-align: center;
+}
+.main-currency { color: #ffffff; font-size: 1.2rem; margin-bottom: 4px; }
+.prestige-level { color: #ffffff; font-size: 0.7rem; margin-bottom: 4px; }
+.player-name { color: #ffb066; font-size: 0.7rem; }
+
+/* LAYOUT TRILATERAL PRINCIPAL */
+.game-main-layout { display: flex; flex: 1; justify-content: space-between; align-items: center; width: 100%; height: calc(100vh - 180px); }
+
+/* COLUNAS LATERAIS SCROLLÁVEIS */
+.items-column-scroll { width: 330px; height: 100%; background-color: #090514; border: 2px solid #332759; border-radius: 8px; padding: 10px; overflow-y: auto; }
+.items-column-scroll::-webkit-scrollbar { width: 10px; }
+.items-column-scroll::-webkit-scrollbar-track { background: #140f26; }
+.items-column-scroll::-webkit-scrollbar-thumb { background: #ffb066; }
+
+/* CAIXAS DE UPGRADES */
+.upgrade-box { border-radius: 8px; padding: 10px; margin-bottom: 12px; border: 2px solid #332759; position: relative; }
+.upgrade-box.locked-escuro { background-color: #120e21; opacity: 0.45; }
+.upgrade-box.owned-claro { background-color: #21193d; border-color: #ffb066; opacity: 1; }
+
+/* NOVO BENEFÍCIO: ESTILO DE PROGRAMA MASTERIZADO (NÍVEL 10+) */
+.upgrade-box.milestone-mastered {
+    border: 2px solid #00ff66 !important;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+}
+.upgrade-box.milestone-mastered .item-title { color: #00ff66 !important; }
+
+.box-header { display: flex; gap: 10px; align-items: center; }
+.item-icon-frame { width: 44px; height: 44px; background: #090514; border: 2px solid #54438a; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; }
+.upgrade-box.owned-claro .item-icon-frame { border-color: #ffb066; }
+.upgrade-box.milestone-mastered .item-icon-frame { border-color: #00ff66; }
+
+.item-meta { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.title-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.item-title { font-size: 0.5rem; color: #fff; font-weight: bold; }
+.item-badge { font-size: 0.4rem; color: #a64dff; background: #000; padding: 2px 4px; border-radius: 3px; }
+.item-cost { font-size: 0.5rem; color: #ffcc66; }
+.item-production { font-size: 0.45rem; color: #00ff66; }
+
+/* TEXTO DE PERK EXPLICATIVO DO BENEFÍCIO */
+.perk-text { font-size: 0.38rem; color: #736d8c; margin: 6px 0 2px 0; line-height: 1.2; text-transform: uppercase; }
+.upgrade-box.milestone-mastered .perk-text { color: #00ff66; font-weight: bold; }
+
+.box-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.box-footer button { background: #ffb066; color: #000; font-size: 0.45rem; padding: 6px 10px; border-radius: 4px; }
+.upgrade-box.locked-escuro .box-footer button { background: #40375c; color: #736d8c; }
+
+.bar-and-time { display: flex; align-items: center; gap: 6px; }
+.progress-outer { width: 65px; height: 12px; background-color: #000; border: 2px solid #ffb066; border-radius: 10px; padding: 1px; overflow: hidden; }
+.upgrade-box.milestone-mastered .progress-outer { border-color: #00ff66; }
+.progress-inner { background-color: #ffb066; width: 0%; height: 100%; border-radius: 6px; }
+.upgrade-box.milestone-mastered .progress-inner { background-color: #00ff66; }
+.time-label { font-size: 0.45rem; color: #ffb066; width: 35px; text-align: right; }
+.upgrade-box.milestone-mastered .time-label { color: #00ff66; }
+
+/* ÁREA CENTRAL E CLIQUE COLETOR */
+.center-area { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.central-bank-btn { width: 120px; height: 120px; border-radius: 50%; background-color: #21163b; border: 4px solid #ffb066; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 30px rgba(255, 176, 102, 0.4); transition: transform 0.1s ease; }
+.central-bank-btn:active { transform: scale(0.92); }
+.bank-icon { font-size: 3.2rem; }
+.click-info { font-size: 0.45rem; color: #736d8c; }
+
+.ranking-toggle-btn { background: #ffb066; color: #000; padding: 12px 20px; font-size: 0.6rem; border-radius: 4px; box-shadow: 0 4px 0 #b37336; }
+.logout-btn { background: transparent; color: #736d8c; font-size: 0.45rem; text-decoration: underline; }
+
+/* PRESTÍGIO ROXO */
+#prestige-trigger-btn { position: absolute; bottom: 20px; right: 20px; background-color: #8000ff; color: #fff; padding: 15px 30px; font-size: 0.75rem; border-radius: 6px; box-shadow: 0 5px 0 #4c0099, 0 0 15px rgba(128, 0, 255, 0.5); }
+
+/* AUTH CONTAINER */
+.auth-container { background: #140f26; border: 4px solid #ffb066; border-radius: 12px; padding: 40px 20px; max-width: 480px; margin: auto; text-align: center; box-shadow: 0 0 25px rgba(255, 176, 102, 0.3); }
+.game-title { font-size: 1.8rem; margin-bottom: 12px; }
+.game-title span { color: #a64dff; }
+.subtitle { font-size: 0.6rem; color: #736d8c; line-height: 1.6; margin-bottom: 25px; }
+.form-group input { width: 100%; padding: 15px; margin: 10px 0; background: #000; border: 2px solid #ffb066; color: #fff; font-size: 0.7rem; outline: none; }
+.auth-buttons { display: flex; gap: 10px; margin-top: 15px; }
+#btn-login { background: #ffb066; color: #000; flex: 1.5; padding: 12px; font-size: 0.75rem; }
+#btn-register { background: transparent; border: 2px solid #a64dff; color: #a64dff; flex: 1; font-size: 0.65rem; }
+.message { font-size: 0.6rem; margin-top: 12px; color: #ffb066; }
+
+/* MODAL DE RANKING */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; }
+.modal-content { background: #140f26; border: 3px solid #ffb066; padding: 30px; width: 90%; max-width: 500px; border-radius: 12px; text-align: center; }
+.modal-content h3 { font-size: 0.8rem; margin-bottom: 20px; color: #ffb066; }
+#leaderboard-list { list-style: none; max-height: 250px; overflow-y: auto; margin-bottom: 20px; }
+#leaderboard-list li { display: flex; justify-content: space-between; padding: 10px; background: #090514; margin-bottom: 6px; font-size: 0.55rem; border-radius: 4px; }
+.close-modal { background: #ff5555; color: #fff; padding: 10px 20px; font-size: 0.6rem; border-radius: 4px; }
+
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+.animate-pulse { animation: pulse 3s infinite ease-in-out; }

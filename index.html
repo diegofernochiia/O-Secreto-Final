@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Governo - Clicker</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <script type="module" src="supabaseClient.js"></script>
+</head>
+<body>
+
+    <div id="auth-screen" class="screen">
+        <div class="auth-container">
+            <h1 class="game-title animate-pulse">BRASIL<br><span>SIMULATOR</span></h1>
+            <p class="subtitle">Gerencie o país, salve seu progresso e suba no ranking</p>
+            
+            <div class="form-group">
+                <input type="text" id="username-input" placeholder="Nome de Usuário" maxlength="15">
+                <input type="password" id="password-input" placeholder="Senha">
+            </div>
+            
+            <div class="auth-buttons">
+                <button id="btn-login" onclick="handleAuth('login')">Entrar</button>
+                <button id="btn-register" onclick="handleAuth('register')">Registrar</button>
+            </div>
+            <p id="auth-message" class="message"></p>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        
+        <div id="event-ticker" class="ticker-hidden">Aguardando relatórios econômicos...</div>
+        
+        <div class="top-status-panel">
+            <div class="main-currency">R$ <span id="stat-money">0</span></div>
+            <div class="prestige-level">Prestige: <span id="stat-prestige">1</span> <small style="font-size:10px; color:#00ff66;">(+<span id="stat-prestige-bonus">0</span>% Lucro)</small></div>
+            <div class="player-name" id="display-username">Convidado</div>
+        </div>
+
+        <div class="game-main-layout">
+            
+            <div class="items-column-scroll">
+                <div id="left-items-container"></div>
+            </div>
+
+            <div class="center-area">
+                <div class="central-bank-btn" onclick="mainClickBoost()">
+                    <div class="bank-icon">🏛️</div>
+                </div>
+                <div class="click-info">Clique rende: R$ <span id="stat-click-power">1</span></div>
+
+                <button class="ranking-toggle-btn" onclick="toggleRankingModal()">🏆 RANKING GLOBAL</button>
+                <button class="logout-btn" onclick="logout()">Sair e Salvar</button>
+            </div>
+
+            <div class="items-column-scroll">
+                <div id="right-items-container"></div>
+            </div>
+
+        </div>
+
+        <button id="prestige-trigger-btn" onclick="triggerPrestige()">PRESTIGE</button>
+    </div>
+
+    <div id="ranking-modal" class="modal-overlay hidden" onclick="toggleRankingModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3>🏆 RANKING PERMANENTE 🏆</h3>
+            <ol id="leaderboard-list"></ol>
+            <button class="close-modal" onclick="toggleRankingModal()">Fechar</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let gameState = {
+            money: 150,
+            prestige: 1,
+            rankingScore: 150,
+            purchasedItems: {}
+        };
+
+        let globalMultiplier = 1;
+        let costMultiplier = 1;
+        let eventTimeout = null;
+
+        const ITEMS_CONFIG = [
+            { id: 'bolsa_familia', name: 'Bolsa Família', baseCost: 25, cycleTime: 2000, baseProduce: 2, icon: '📦', side: 'left', perk: "Nvl 10: Ciclo 2x mais rápido!" },
+            { id: 'gas_povo', name: 'Gás do Povo', baseCost: 55, cycleTime: 3000, baseProduce: 5, icon: '🔥', side: 'left', perk: "Nvl 10: +50% de bônus de produção!" },
+            { id: 'pe_de_meia', name: 'Pé de Meia', baseCost: 90, cycleTime: 4000, baseProduce: 8, icon: '🧦', side: 'left', perk: "Nvl 10: Ciclo 2x mais rápido!" },
+            { id: 'cad_unico', name: 'CadÚnico', baseCost: 180, cycleTime: 6000, baseProduce: 18, icon: '📋', side: 'left', perk: "Nvl 10: +50% de bônus de produção!" },
+            { id: 'minha_casa', name: 'Minha Casa Minha Vida', baseCost: 320, cycleTime: 8000, baseProduce: 35, icon: '🏠', side: 'left', perk: "Nvl 10: Ciclo 2x mais rápido!" },
+            { id: 'desenrola', name: 'Desenrola Brasil', baseCost: 950, cycleTime: 14000, baseProduce: 110, icon: '💸', side: 'right', perk: "Nvl 10: +50% de bônus de produção!" },
+            { id: 'cnh_brasil', name: 'CNH do Brasil', baseCost: 1600, cycleTime: 18000, baseProduce: 220, icon: '🪪', side: 'right', perk: "Nvl 10: Ciclo 2x mais rápido!" },
+            { id: 'farmacia', name: 'Farmácia Popular', baseCost: 2800, cycleTime: 22000, baseProduce: 420, icon: '💊', side: 'right', perk: "Nvl 10: +50% de bônus de produção!" },
+            { id: 'mais_medicos', name: 'Mais Médicos', baseCost: 12500, cycleTime: 48000, baseProduce: 2100, icon: '🩺', side: 'right', perk: "Nvl 10: Lucro TRIPLO!" }
+        ];
+
+        let activeIntervals = {};
+
+        function startEventEngine() {
+            setInterval(() => {
+                if (!currentUser) return;
+                if (Math.random() < 0.40) {
+                    triggerRandomEvent();
+                }
+            }, 30000);
+        }
+
+        function triggerRandomEvent() {
+            const events = [
+                { text: "🚀 MILAGRE ECONÔMICO: Produção geral DUPLICADA por 15s!", mult: 2, cost: 1, style: "event-positive" },
+                { text: "💥 CRASH NA BOLSA: Lucros reduzidos pela metade por 15s!", mult: 0.5, cost: 1, style: "event-negative" },
+                { text: "🏛️ REFORMA TRIBUTÁRIA: Custos de novos programas reduzidos em 30% por 15s!", mult: 1, cost: 0.7, style: "event-positive" }
+            ];
+
+            const selected = events[Math.floor(Math.random() * events.length)];
+            globalMultiplier = selected.mult;
+            costMultiplier = selected.cost;
+
+            const ticker = document.getElementById('event-ticker');
+            ticker.textContent = selected.text;
+            ticker.className = `event-ticker-active ${selected.style}`;
+
+            buildStore();
+
+            clearTimeout(eventTimeout);
+            eventTimeout = setTimeout(() => {
+                globalMultiplier = 1;
+                costMultiplier = 1;
+                ticker.className = "ticker-hidden";
+                buildStore();
+            }, 15000);
+        }
+
+        // --- SISTEMA CONECTADO AO SEU SUPABASE CLIENT ---
+        async function handleAuth(type) {
+            const user = document.getElementById('username-input').value.trim();
+            const pass = document.getElementById('password-input').value;
+            const msg = document.getElementById('auth-message');
+
+            if (!window.supabaseClient) {
+                msg.textContent = "Carregando banco de dados... Tente novamente em 2 segundos.";
+                return;
+            }
+
+            if (!user || !pass) { msg.textContent = "Preencha os campos!"; return; }
+            msg.textContent = "Conectando ao servidor...";
+
+            if (type === 'register') {
+                const { data } = await window.supabaseClient.from('users').select('username').eq('username', user).maybeSingle();
+                
+                if (data) { 
+                    msg.style.color = "#ff3366"; msg.textContent = "Usuário já registrado!"; 
+                } else {
+                    const { error } = await window.supabaseClient.from('users').insert([{ 
+                        username: user, password: pass, money: 150, prestige: 1, ranking_score: 150, purchased_items: {} 
+                    }]);
+
+                    if (error) {
+                        msg.style.color = "#ff3366"; msg.textContent = "Erro ao registrar.";
+                    } else {
+                        msg.style.color = "#00ffcc"; msg.textContent = "Registrado! Clique em Entrar.";
+                    }
+                }
+            } else {
+                const { data } = await window.supabaseClient.from('users').select('*').eq('username', user).eq('password', pass).maybeSingle();
+
+                if (data) {
+                    currentUser = user;
+                    gameState = {
+                        money: Number(data.money),
+                        prestige: Number(data.prestige),
+                        rankingScore: Number(data.ranking_score),
+                        purchasedItems: data.purchased_items || {}
+                    };
+                    loadGame();
+                    switchScreen('game-screen');
+                } else {
+                    msg.style.color = "#ff3366"; msg.textContent = "Senha ou usuário inválidos.";
+                }
+            }
+        }
+
+        function loadGame() {
+            document.getElementById('display-username').textContent = currentUser;
+            updateUI();
+            buildStore();
+            startProductionCycles();
+            startEventEngine();
+        }
+
+        async function saveGame() {
+            if (!currentUser || !window.supabaseClient) return;
+            await window.supabaseClient.from('users').update({
+                money: gameState.money,
+                prestige: gameState.prestige,
+                ranking_score: gameState.rankingScore,
+                purchased_items: gameState.purchasedItems
+            }).eq('username', currentUser);
+        }
+
+        function logout() {
+            saveGame().then(() => {
+                Object.values(activeIntervals).forEach(clearInterval);
+                activeIntervals = {};
+                currentUser = null;
+                switchScreen('auth-screen');
+            });
+        }
+
+        function switchScreen(id) {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function buildStore() {
+            const leftContainer = document.getElementById('left-items-container');
+            const rightContainer = document.getElementById('right-items-container');
+            
+            leftContainer.innerHTML = "";
+            rightContainer.innerHTML = "";
+
+            ITEMS_CONFIG.forEach(item => {
+                const count = gameState.purchasedItems[item.id] || 0;
+                const isBought = count > 0;
+                const currentCost = Math.floor((item.baseCost * Math.pow(1.4, count)) * costMultiplier);
+                
+                let itemMultiplier = 1;
+                if (count >= 10) {
+                    if (item.id === 'mais_medicos') itemMultiplier = 3;
+                    else if (item.perk.includes("+50%")) itemMultiplier = 1.5;
+                }
+
+                const prestigeBonus = 1 + ((gameState.prestige - 1) * 0.15);
+                const currentProduction = (item.baseProduce * count * prestigeBonus * itemMultiplier * globalMultiplier).toFixed(1);
+
+                const card = document.createElement('div');
+                card.className = `upgrade-box ${isBought ? 'owned-claro' : 'locked-escuro'} ${count >= 10 ? 'milestone-mastered' : ''}`;
+                card.id = `card-${item.id}`;
+
+                card.innerHTML = `
+                    <div class="box-header">
+                        <div class="item-icon-frame">${item.icon}</div>
+                        <div class="item-meta">
+                            <div class="title-row">
+                                <span class="item-title">${item.name}</span>
+                                <span class="item-badge">Qtd: ${count}</span>
+                            </div>
+                            <span class="item-cost">R$ ${currentCost.toLocaleString()}</span>
+                            <span class="item-production">Produz: R$ ${currentProduction}/ciclo</span>
+                        </div>
+                    </div>
+                    <div class="perk-text">${item.perk}</div>
+                    <div class="box-footer">
+                        <button id="btn-buy-${item.id}" onclick="buyUpgrade('${item.id}')">Evoluir</button>
+                        <div class="bar-and-time">
+                            <div class="progress-outer">
+                                <div class="progress-inner" id="progress-${item.id}"></div>
+                            </div>
+                            <span class="time-label" id="time-display-${item.id}">-s</span>
+                        </div>
+                    </div>
+                `;
+
+                if (item.side === 'left') leftContainer.appendChild(card);
+                else rightContainer.appendChild(card);
+            });
+        }
+
+        function buyUpgrade(id) {
+            const item = ITEMS_CONFIG.find(i => i.id === id);
+            const count = gameState.purchasedItems[id] || 0;
+            const currentCost = Math.floor((item.baseCost * Math.pow(1.4, count)) * costMultiplier);
+
+            if (gameState.money >= currentCost) {
+                gameState.money -= currentCost;
+                gameState.purchasedItems[id] = count + 1;
+                
+                buildStore();
+                updateUI();
+                startProductionCycles();
+                saveGame();
+            }
+        }
+
+        function startProductionCycles() {
+            Object.values(activeIntervals).forEach(clearInterval);
+            activeIntervals = {};
+
+            ITEMS_CONFIG.forEach(item => {
+                const count = gameState.purchasedItems[item.id] || 0;
+                if (count > 0) {
+                    let progress = 0;
+                    const progressBar = document.getElementById(`progress-${item.id}`);
+                    
+                    let speedBonus = 1;
+                    if (count >= 10 && item.perk.includes("2x mais rápido")) {
+                        speedBonus = 0.5;
+                    }
+
+                    const finalCycleTime = item.cycleTime * speedBonus;
+                    const timeLabel = document.getElementById(`time-display-${item.id}`);
+                    if (timeLabel) timeLabel.textContent = `${(finalCycleTime / 1000).toFixed(1)}s`;
+
+                    const intervalSpeed = 50; 
+                    const increment = (intervalSpeed / finalCycleTime) * 100;
+
+                    activeIntervals[item.id] = setInterval(() => {
+                        progress += increment;
+                        if (progress >= 100) {
+                            progress = 0;
+                            
+                            let itemMultiplier = 1;
+                            if (count >= 10) {
+                                if (item.id === 'mais_medicos') itemMultiplier = 3;
+                                else if (item.perk.includes("+50%")) itemMultiplier = 1.5;
+                            }
+
+                            const prestigeBonus = 1 + ((gameState.prestige - 1) * 0.15);
+                            const productionValue = Math.floor(item.baseProduce * count * prestigeBonus * itemMultiplier * globalMultiplier);
+                            
+                            gameState.money += productionValue;
+                            gameState.rankingScore += productionValue;
+                            
+                            updateUI();
+                            saveGame();
+                        }
+                        if (progressBar) progressBar.style.width = progress + '%';
+                    }, intervalSpeed);
+                }
+            });
+        }
+
+        function mainClickBoost() {
+            let clickGain = Math.floor(1 * gameState.prestige * globalMultiplier);
+            gameState.money += clickGain;
+            gameState.rankingScore += clickGain;
+            updateUI();
+            saveGame();
+        }
+
+        function toggleRankingModal() {
+            const modal = document.getElementById('ranking-modal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) renderLeaderboard();
+        }
+
+        // CARREGA RANKING REAL DO BANCO
+        async function renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            if (!window.supabaseClient) return;
+            list.innerHTML = "<li>Carregando ranking...</li>";
+            
+            const { data } = await window.supabaseClient.from('users').select('username, ranking_score').order('ranking_score', { ascending: false }).limit(10);
+            
+            if (data) {
+                list.innerHTML = "";
+                data.forEach(player => {
+                    const li = document.createElement('li');
+                    if (player.username === currentUser) li.style.color = "#ffb066";
+                    li.innerHTML = `<span>${player.username}</span> <span>R$ ${Number(player.ranking_score).toLocaleString()}</span>`;
+                    list.appendChild(li);
+                });
+            }
+        }
+
+        function triggerPrestige() {
+            const costRequired = Math.floor(1000 * Math.pow(3, gameState.prestige - 1));
+
+            if (gameState.money >= costRequired) {
+                if (confirm(`Deseja aplicar o Prestige? Seus programas e moedas voltam a zero, mas seu multiplicador permanente de Prestígio sobe para +${gameState.prestige * 15}%!`)) {
+                    gameState.prestige += 1;
+                    gameState.money = 0;
+                    gameState.purchasedItems = {};
+                    
+                    buildStore();
+                    updateUI();
+                    startProductionCycles();
+                    saveGame();
+                }
+            } else {
+                alert(`Moedas insuficientes! Você precisa de R$ ${costRequired.toLocaleString()}`);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('stat-money').textContent = Math.floor(gameState.money).toLocaleString();
+            document.getElementById('stat-prestige').textContent = gameState.prestige;
+            document.getElementById('stat-prestige-bonus').textContent = ((gameState.prestige - 1) * 15);
+            document.getElementById('stat-click-power').textContent = Math.floor(1 * gameState.prestige * globalMultiplier);
+        }
+    </script>
+</body>
+</html>

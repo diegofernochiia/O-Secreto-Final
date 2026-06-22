@@ -8,8 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="supabaseClient.js"></script>
 </head>
 <body>
 
@@ -72,6 +70,18 @@
     </div>
 
     <script>
+        // Inicialização do Banco de Dados direto no Script principal
+        const supabaseUrl = 'https://hwbmkoydbkbdjhqdrwyt.supabase.co'; 
+        const supabaseKey = 'sb_publishable_X0R5B6o-YipVUju_FIytO-UP'; 
+        
+        let supabaseClient = null;
+        try {
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+            window.supabaseClient = supabaseClient;
+        } catch (e) {
+            console.error("Erro ao carregar o cliente do Supabase:", e);
+        }
+
         let currentUser = null;
         let gameState = {
             money: 150,
@@ -140,7 +150,7 @@
             const msg = document.getElementById('auth-message');
 
             if (!window.supabaseClient) {
-                msg.textContent = "Carregando banco de dados... Tente novamente.";
+                msg.textContent = "Erro na conexão com o Supabase. Verifique sua conexão.";
                 return;
             }
 
@@ -153,12 +163,14 @@
                 if (data) { 
                     msg.style.color = "#ff3366"; msg.textContent = "Usuário já registrado!"; 
                 } else {
+                    // Importante: Removido o campo 'id' do insert para que o banco use o Autoincremento (Identity) automaticamente
                     const { error } = await window.supabaseClient.from('users').insert([{ 
                         username: user, password: pass, money: 150, prestige: 1, ranking_score: 150, purchased_items: {} 
                     }]);
 
                     if (error) {
-                        msg.style.color = "#ff3366"; msg.textContent = "Erro ao registrar.";
+                        console.error(error);
+                        msg.style.color = "#ff3366"; msg.textContent = "Erro ao registrar no banco.";
                     } else {
                         msg.style.color = "#00ffcc"; msg.textContent = "Registrado! Clique em Entrar.";
                     }
